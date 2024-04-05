@@ -9,6 +9,11 @@ framework:
     #esi: true
     #fragments: true
 
+    http_client:
+        scoped_clients:
+            chuck_norris_jokes.client:
+                base_uri: 'https://api.chucknorris.io'
+
 when@test:
     framework:
         test: true

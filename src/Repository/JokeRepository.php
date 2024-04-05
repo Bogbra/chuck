@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Joke;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -19,6 +20,36 @@ class JokeRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Joke::class);
+    }
+
+    public function jokeExists(string $joke): bool
+    {
+        $qb = $this->createQueryBuilder('j');
+        $qb
+            ->select($qb->expr()->count('j.id'))
+            ->where('j.joke = :joke')
+            ->setParameter('joke', $joke)
+        ;
+
+        return $qb->getQuery()->getSingleScalarResult() > 0;
+    }
+
+    public function findRandom(): ?Joke
+    {
+        $sql = 'SELECT j.id, j.joke FROM joke j ORDER BY RAND() LIMIT 1';
+
+        $rsm = new ResultSetMapping();
+        $rsm->addEntityResult(Joke::class, 'j');
+        $rsm->addFieldResult('j', 'id', 'id');
+        $rsm->addFieldResult('j', 'joke', 'joke');
+
+        return $this->getEntityManager()->createNativeQuery($sql, $rsm)->getOneOrNullResult();
+    }
+
+    public function addJoke(Joke $joke): void
+    {
+        $this->getEntityManager()->persist($joke);
+        $this->getEntityManager()->flush();
     }
 
     //    /**
